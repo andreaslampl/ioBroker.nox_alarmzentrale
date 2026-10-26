@@ -12,7 +12,7 @@ const swap = v => ((v & 0xff) << 8) | (v >> 8);
  * @param {object} o version (area states 1 = bits, 2 = number), swapped (bytes low first, like the owner's reading),
  *   offset (register n is at address n + offset), refuseArm (area -> error bit when it should be armed)
  */
-function fakeNox({ unitId = 1, version = 2, swapped = false, offset = 0, refuseArm = {} } = {}) {
+function fakeNox({ unitId = 1, version = 2, swapped = false, offset = 0, refuseArm = {}, maskStyle = 'std' } = {}) {
     const regs = new Map();
     const code = n => (version === 2 ? n : 1 << n);
     const n = {
@@ -103,7 +103,8 @@ function fakeNox({ unitId = 1, version = 2, swapped = false, offset = 0, refuseA
                     const or = word(pdu.readUInt16BE(5));
                     n.writes.push(['mask', addr, and, or]);
                     const cur = n.get(addr);
-                    const next = (cur & and) | (or & ~and);
+                    // std = Modbus spec; inv = "and" names the bits to change (ignores the spec variant)
+                    const next = maskStyle === 'inv' ? (cur & ~and) | (or & and) : (cur & and) | (or & ~and);
                     // bit 7 = deactivate (shows as bit 2), bit 6 = acknowledge (clears the alarm bit 3)
                     let st = next & 0x80 ? cur | 4 : cur & ~4;
                     if (next & 0x40) {

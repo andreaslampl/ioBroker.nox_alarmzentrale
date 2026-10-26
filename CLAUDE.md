@@ -71,6 +71,12 @@ the generic modbus adapter + Blockly and wanted readable states instead.
   ("Modbus 503 1 11 1 0 0 0 1 0 1 ..."), not decodable without the tool's labels. Asked for a screenshot of the
   Modbus server page and the area option, and how the other input was deactivated.
 
+- Owner's NOX Modbus server page: port 503, allowed functions all ticked (area switching, decimal area state,
+  deactivation "immer (auch wenn scharf)", acknowledging), Address-Offset 0, addressing "Eingangsnummer -> Modbus
+  Adresse". So rights were fine -> suspected non-standard mask write. 0.1.4: `deactivate()` tries the spec variant
+  (and = ~bit) and, if the bit did not change after 1.5 s, the inverse one (and = bit); the working one is kept in
+  `info.maskMode` (state, survives restarts). Deactivation commands run one after another (`deactChain`).
+
 ## Conventions
 
 - UI texts and README in German, code and comments in English.

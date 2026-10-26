@@ -21,7 +21,7 @@ ob die NOX zwei Modbus-Verbindungen gleichzeitig annimmt, ist nicht dokumentiert
 
 | Feld | Bedeutung |
 | --- | --- |
-| Adresse, Port, Unit-ID | NOX-Zentrale (Port meist 502) |
+| Adresse, Port, Unit-ID | NOX-Zentrale; Port wie im NOX-Programm unter Modbus → Modbus Server (z. B. 503) |
 | Abfrage alle | Standard 1 s |
 | Register der Bereiche | Bereich 1 = Register 1, z. B. `1-16` |
 | Register der Melder | Ab R9: NOX-Eingang 1 = Register 10000 (die NOX kann eine Export-Liste mit allen Registern erzeugen). Älter: Modul-ID + Eingang, z. B. `20011-20018`. Mehrere Bereiche mit Komma. |
@@ -56,6 +56,11 @@ mit Steuern auch schaltbar), `alarm`, `open2`, `raw`, `ack` (nur mit Steuern: Al
 **Alle Alarme quittieren**: `nox_alarmzentrale.0.control.ackAll` (nur mit Steuern).
 
 **NOX THS/THT** `nox_alarmzentrale.0.climate.<ID>`: `temperature`, `humidity`, Alarme, Fühlerfehler, Gerät fehlt.
+
+In der NOX unter **Modbus → Modbus Server → Erlaubte Funktionen** müssen Bereichsschaltungen, Melderdeaktivierung
+und Alarmquittierung angehakt sein, „Adressierung“ = Eingangsnummer → Modbus Adresse passt zur Exportliste.
+Beim ersten Abschalten eines Melders prüft der Adapter, welche Variante des Maskenschreibens die NOX versteht, und
+merkt sie sich (`info.maskMode`).
 
 ## Sicherheit
 

@@ -69,6 +69,10 @@ class Nox extends utils.Adapter {
         await this.extendObject('info.byteOrder', ro('Byte-Reihenfolge', 'string', 'text'));
         await this.extendObject('info.areas', ro('Gefundene Bereiche', 'number', 'value'));
         await this.extendObject('info.inputs', ro('Gefundene Melder', 'number', 'value'));
+        await this.extendObject('info.maskMode', ro('Maskenschreiben (Melder abschalten)', 'string', 'text', { states: { std: 'Standard', inv: 'umgekehrt' } }));
+        const mm = await this.getStateAsync('info.maskMode');
+        this.maskMode = mm && ['std', 'inv'].includes(mm.val) ? mm.val : 'std';
+        this.maskConfirmed = Boolean(mm && ['std', 'inv'].includes(mm.val));
         if (this.control) {
             await this.extendObject('control', { type: 'channel', common: { name: 'Steuerung' }, native: {} });
             await this.extendObject('control.ackAll', rw('Alle Alarme quittieren', 'boolean', 'button', { def: false }));
@@ -410,9 +414,11 @@ class Nox extends utils.Adapter {
                 const reg = Number(m[1]) + this.offset;
                 if (m[2] === 'deactivated') {
                     const on = state.val === true || state.val === 'true' || state.val === 1;
-                    const [before] = await this.mb.read(reg, 1);
-                    await this.mask(reg, 7, on);
-                    this.checkDeactivate(Number(m[1]), reg, before, on);
+                    // one after another: the check of a command must not see the result of the next one
+                    this.deactChain = (this.deactChain || Promise.resolve()).then(async () => {
+                        const [before] = await this.mb.read(reg, 1);
+                        await this.deactivate(Number(m[1]), reg, before, on);
+                    }).catch(err => this.log.warn(`Befehl ${rel} fehlgeschlagen: ${err.message}`));
                 } else if (state.val) {
                     await this.mask(reg, 6, true);
                     await this.setState(rel, false, true);
@@ -435,31 +441,45 @@ class Nox extends utils.Adapter {
         this.timer = setTimeout(() => this.poll(), 300);
     }
 
-    /** diagnosis: what the NOX shows a moment after a (de)activation command */
-    checkDeactivate(nr, reg, before, on) {
+    /**
+     * Switch a detector off/on and check what the NOX shows 1.5 s later. Until a variant of the mask write has worked
+     * once, the other one is tried too (the NOX ignored the standard one in the field); the working one is kept in
+     * info.maskMode.
+     */
+    async deactivate(nr, reg, before, on) {
         const hex = v => `0x${v.toString(16).padStart(4, '0')}`;
-        setTimeout(async () => {
-            try {
-                const [after] = await this.mb.read(reg, 1);
-                const done = N.parseInput(this.fix(after)).deactivated === on;
-                const name = this.names.get(`input:${nr}`) || `Melder ${nr}`;
-                const msg = `${name}: ${on ? 'abschalten' : 'einschalten'} gesendet (Register ${reg}, vorher ${hex(before)}) – NOX meldet jetzt ${hex(after)}`;
-                if (done) {
-                    this.log.info(`${msg}, ${on ? 'abgeschaltet' : 'eingeschaltet'}`);
-                } else {
-                    this.log.warn(`${msg}, ${on ? 'NICHT abgeschaltet' : 'NICHT eingeschaltet'} (Berechtigung des Modbus-Servers in der NOX prüfen)`);
+        const name = this.names.get(`input:${nr}`) || `Melder ${nr}`;
+        const modes = this.maskConfirmed ? [this.maskMode] : [this.maskMode, this.maskMode === 'std' ? 'inv' : 'std'];
+        let after = before;
+        for (const mode of modes) {
+            await this.mask(reg, 7, on, mode);
+            await new Promise(r => setTimeout(r, Number(this.config.checkMs) || 1500)); // checkMs: tests only
+            [after] = await this.mb.read(reg, 1);
+            if (N.parseInput(this.fix(after)).deactivated === on) {
+                if (!this.maskConfirmed || mode !== this.maskMode) {
+                    this.maskMode = mode;
+                    this.maskConfirmed = true;
+                    await this.setState('info.maskMode', mode, true);
+                    this.log.info(`Maskenschreiben: Variante ${mode === 'std' ? 'Standard' : 'umgekehrt'} funktioniert mit dieser NOX`);
                 }
-            } catch (err) {
-                this.log.debug(`Kontrolle Register ${reg}: ${err.message}`);
+                this.log.info(`${name}: ${on ? 'abgeschaltet' : 'eingeschaltet'} (Register ${reg}, vorher ${hex(before)}, jetzt ${hex(after)})`);
+                return;
             }
-        }, 1500);
+        }
+        this.log.warn(`${name}: ${on ? 'abschalten' : 'einschalten'} gesendet (Register ${reg}, vorher ${hex(before)}, Variante${modes.length > 1 ? 'n Standard und umgekehrt' : ` ${this.maskMode}`}) – NOX meldet jetzt ${hex(after)}, NICHT ${on ? 'abgeschaltet' : 'eingeschaltet'}`);
     }
 
-    /** set or clear one bit with "mask write register" (in the NOX's byte order) */
-    async mask(reg, bit, on) {
+    /**
+     * set or clear one bit with "mask write register" (in the NOX's byte order). std (Modbus spec): result = (current
+     * AND and) OR (or AND NOT and), the bit is cleared in "and" and set again by "or"; inv: "and" names the bit to change.
+     */
+    async mask(reg, bit, on, mode = this.maskMode) {
         const b = 1 << bit;
-        // Modbus: result = (current AND and) OR (or AND NOT and) - the bit is cleared in "and", set again by "or"
-        await this.mb.maskWrite(reg, this.fix(0xffff & ~b), this.fix(on ? b : 0));
+        if (mode === 'inv') {
+            await this.mb.maskWrite(reg, this.fix(b), this.fix(on ? b : 0));
+        } else {
+            await this.mb.maskWrite(reg, this.fix(0xffff & ~b), this.fix(on ? b : 0));
+        }
     }
 
     onUnload(callback) {

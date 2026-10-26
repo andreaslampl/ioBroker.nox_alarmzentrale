@@ -35,7 +35,7 @@ async function start(t, config = {}, noxOpts = {}, setup = () => {}, foreign = {
     const nox = fakeNox(noxOpts);
     setup(nox);
     const port = await nox.listen();
-    const adapter = require('../main.js')({ config: { host: '127.0.0.1', port, unitId: 1, pollMs: 60, areas: '1-4', inputs: '10000-10009', ...config } });
+    const adapter = require('../main.js')({ config: { host: '127.0.0.1', port, unitId: 1, pollMs: 60, checkMs: 150, areas: '1-4', inputs: '10000-10009', ...config } });
     adapter.foreignObjects = foreign;
     adapter.emit('ready');
     t.after(async () => {
@@ -205,4 +205,23 @@ test('export list in the settings: names, area and registers outside the configu
     assert.equal(adapter.val('inputs.10007.area'), 2);
     assert.equal(adapter.objects['nox_alarmzentrale.0.inputs.10004'], undefined, 'not used by the NOX -> not created');
     assert.ok(adapter.logs.includes('info: Exportliste: 5 Eingänge mit Namen oder Bereich'));
+});
+
+test('a NOX that reads the mask write the other way round: second variant tried, kept for later', async t => {
+    const { nox, adapter } = await start(t, { allowControl: true }, { maskStyle: 'inv' }, nx => {
+        nx.input(10000);
+        nx.input(10001);
+    });
+    await until(() => adapter.val('inputs.10000.deactivated') === false);
+    adapter.command('inputs.10000.deactivated', true);
+    await until(() => adapter.val('info.maskMode') === 'inv');
+    await until(() => adapter.val('inputs.10000.deactivated') === true && adapter.states['nox_alarmzentrale.0.inputs.10000.deactivated'].ack);
+    assert.deepEqual(nox.writes.filter(w => w[0] === 'mask').map(w => [w[2], w[3]]), [[0xff7f, 0x80], [0x80, 0x80]]);
+    assert.ok(adapter.logs.includes('info: Maskenschreiben: Variante umgekehrt funktioniert mit dieser NOX'));
+    // from now on only the working variant
+    adapter.command('inputs.10001.deactivated', true);
+    await until(() => adapter.val('inputs.10001.deactivated') === true && adapter.states['nox_alarmzentrale.0.inputs.10001.deactivated'].ack);
+    adapter.command('inputs.10001.deactivated', false);
+    await until(() => adapter.val('inputs.10001.deactivated') === false && adapter.states['nox_alarmzentrale.0.inputs.10001.deactivated'].ack);
+    assert.deepEqual(nox.writes.filter(w => w[0] === 'mask').slice(2).map(w => [w[2], w[3]]), [[0x80, 0x80], [0x80, 0]]);
 });
