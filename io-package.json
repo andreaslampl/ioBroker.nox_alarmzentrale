@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "nox_alarmzentrale",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "news": {
+      "0.1.2": {
+        "en": "NOX export list (CSV) can be pasted in the settings: names, areas and registers of all detectors",
+        "de": "NOX-Exportliste (CSV) kann in den Einstellungen eingefügt werden: Namen, Bereiche und Register aller Melder"
+      },
       "0.1.1": {
         "en": "Names and registers can be taken over from an instance of the modbus adapter (setting 'Aus modbus-Instanz übernehmen')",
         "de": "Namen und Register lassen sich aus einer modbus-Adapter-Instanz übernehmen (Einstellung „Aus modbus-Instanz übernehmen“)"
@@ -63,7 +67,8 @@
     "allowControl": false,
     "names": [],
     "climate": [],
-    "modbusImport": ""
+    "modbusImport": "",
+    "exportCsv": ""
   },
   "objects": [],
   "instanceObjects": [

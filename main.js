@@ -49,6 +49,8 @@ class Nox extends utils.Adapter {
             return;
         }
         this.names = new Map();
+        this.inputArea = new Map();
+        this.importExport();
         await this.importModbus();
         for (const row of Array.isArray(this.config.names) ? this.config.names : []) {
             const nr = Number(row && row.nr);
@@ -82,6 +84,28 @@ class Nox extends utils.Adapter {
         this.subscribeStates('inputs.*');
         this.subscribeStates('control.*');
         this.poll();
+    }
+
+    /** names, areas and registers of the detectors from the NOX export list pasted into the settings */
+    importExport() {
+        const list = N.parseExport(this.config.exportCsv);
+        if (!list.length) {
+            if (String(this.config.exportCsv || '').trim()) {
+                this.log.warn('Exportliste: keine Eingänge erkannt (erwartet: CSV-Export der NOX mit „UnitType;InputOutput;ID;Name;Area;…“)');
+            }
+            return;
+        }
+        for (const e of list) {
+            if (!this.inputRegs.includes(e.reg)) {
+                this.inputRegs.push(e.reg);
+            }
+            if (e.name) {
+                this.names.set(`input:${e.reg}`, e.name);
+            }
+            this.inputArea.set(e.reg, e.area);
+        }
+        this.inputRegs.sort((a, b) => a - b);
+        this.log.info(`Exportliste: ${list.length} Eingänge mit Namen oder Bereich`);
     }
 
     /**
@@ -217,6 +241,10 @@ class Nox extends utils.Adapter {
         const p = `inputs.${r}`;
         await this.extendObject('inputs', { type: 'folder', common: { name: 'Melder' }, native: {} });
         await this.extendObject(p, { type: 'channel', common: { name: this.names.get(`input:${r}`) || `Melder ${r}` }, native: { register: r } });
+        if (this.inputArea.has(r)) {
+            await this.extendObject(`${p}.area`, ro('Bereich (laut Exportliste)', 'number', 'value'));
+            await this.put(`${p}.area`, this.inputArea.get(r));
+        }
         await this.extendObject(`${p}.open`, ro('Offen / Bewegung', 'boolean', 'sensor'));
         await this.extendObject(`${p}.sabotage`, ro('Sabotage', 'boolean', 'indicator.alarm'));
         await this.extendObject(`${p}.deactivated`, this.control ? rw('Abgeschaltet', 'boolean', 'switch') : ro('Abgeschaltet', 'boolean', 'indicator'));

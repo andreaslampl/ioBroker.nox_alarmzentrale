@@ -78,6 +78,15 @@
       "xs": 12,
       "sm": 6
     },
+    "exportCsv": {
+      "type": "text",
+      "label": "NOX export list (CSV)",
+      "help": "Open the export (.csv) in an editor, copy everything and paste it here: names, areas and registers of all detectors",
+      "minRows": 3,
+      "maxRows": 10,
+      "newLine": true,
+      "xs": 12
+    },
     "byteOrder": {
       "type": "select",
       "label": "Byte order",

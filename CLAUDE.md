@@ -39,6 +39,12 @@ the generic modbus adapter + Blockly and wanted readable states instead.
   uses the names (own table wins). Owner's values: areas 384 (= 0x8001 version 2 Unscharf), 1408 = open + deactivated;
   their modbus adapter was set to little endian, so the NOX itself sends standard order.
 
+- 0.1.2: owner sent the NOX export list (CSV `UnitType;InputOutput;ID;Name;Area;InputProfile`, unit rows then I/O rows,
+  names `{02Name¦Zusatz}`, 02 = German) - not committed. Every I row in list order = next input, register = 10000 +
+  running number: matched 12/12 of the owner's modbus addresses (so with offset 0 the NOX's "input 1 = 10000" is
+  the list's first input at 10001 - whatever the reason, the field data wins). Pasted into `exportCsv`
+  (`parseExport()`); name priority: own table > modbus import > export; `inputs.N.area` from the list.
+
 ## Conventions
 
 - UI texts and README in German, code and comments in English.

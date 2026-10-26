@@ -22,7 +22,8 @@ ob die NOX zwei Modbus-Verbindungen gleichzeitig annimmt, ist nicht dokumentiert
 | Abfrage alle | Standard 1 s |
 | Register der Bereiche | Bereich 1 = Register 1, z. B. `1-16` |
 | Register der Melder | Ab R9: NOX-Eingang 1 = Register 10000 (die NOX kann eine Export-Liste mit allen Registern erzeugen). Älter: Modul-ID + Eingang, z. B. `20011-20018`. Mehrere Bereiche mit Komma. |
-| Aus modbus-Instanz übernehmen | z. B. `modbus.0`: Namen und Register aus dem modbus-Adapter, der die NOX bisher liest – nichts abtippen. Eigene Namen in der Tabelle unten haben Vorrang. |
+| NOX-Exportliste (CSV) | Export der NOX (.csv) im Editor öffnen, alles kopieren und einfügen: Namen, Bereich und Register aller Melder. Register = 10000 + laufende Nummer des Eingangs in der Liste. |
+| Aus modbus-Instanz übernehmen | z. B. `modbus.0`: Namen und Register aus dem modbus-Adapter, der die NOX bisher liest – nichts abtippen. Diese Namen gehen vor die aus der Exportliste, eigene Namen in der Tabelle unten haben Vorrang. |
 | Byte-Reihenfolge | **automatisch** erkennt sie selbst. Hintergrund: Werte wie 128 (Ruhe) und 384 (offen) sind nur vertauschte Bytes – eigentlich 32768 = „Melder wird benutzt“ und 32769 = „benutzt + offen“. |
 | Bereichszustände | Version 1 (ein Bit pro Zustand) oder 2 (Zahl, NOX ab 9.71) – automatisch erkannt |
 | Adressversatz | falls die Werte um ein Register verrutscht sind |

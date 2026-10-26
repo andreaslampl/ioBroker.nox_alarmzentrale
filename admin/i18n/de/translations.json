@@ -32,5 +32,7 @@
   "ID number": "ID-Nummer",
   "Type": "Typ",
   "Take over from modbus instance": "Aus modbus-Instanz übernehmen",
-  "e.g. modbus.0 - names and registers of the modbus adapter that already reads the NOX": "z. B. modbus.0 – Namen und Register des modbus-Adapters, der die NOX schon liest"
+  "e.g. modbus.0 - names and registers of the modbus adapter that already reads the NOX": "z. B. modbus.0 – Namen und Register des modbus-Adapters, der die NOX schon liest",
+  "NOX export list (CSV)": "NOX-Exportliste (CSV)",
+  "Open the export (.csv) in an editor, copy everything and paste it here: names, areas and registers of all detectors": "Export (.csv) im Editor öffnen, alles kopieren und hier einfügen: Namen, Bereiche und Register aller Melder"
 }

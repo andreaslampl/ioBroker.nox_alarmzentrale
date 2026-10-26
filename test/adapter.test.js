@@ -169,3 +169,40 @@ test('names and registers taken over from the modbus adapter (as the owner set i
     assert.equal(adapter.val('areas.1.text'), 'Unscharf');
     assert.ok(adapter.logs.includes('info: Übernommen aus modbus.0: 1 Bereich(e), 2 Melder mit Namen'));
 });
+
+const EXPORT = [
+    'UnitType;InputOutput;ID;Name;Area;InputProfile',
+    'NX1;;1000;{00Zentrale}{02Zentrale};;',
+    ';I1;1000-O;{02Zentrale¦offen};0;1',
+    ';I2;1000-1;{02¦};0;1',
+    ';I3;1000-2;{02Zentrale¦Netzausfall &gt;30 Min.};6;15',
+    ';O1;1000-1;{02Sirene¦};;',
+    'MIO;;1001;{02Modul Keller¦};;',
+    ';I1;1001-M;{02Modul Keller¦ fehlt};1;10',
+    ';I2;1001-1;{01Door}{02Tür¦Eingang}{03Porte};1;40',
+    ';I3;1001-2;{02¦};0;1',
+    ';I4;1001-3;{02Fenster¦};2;40',
+].join('\n');
+
+test('NOX export list: register = 10000 + running number of the input, names in German', () => {
+    assert.deepEqual(N.parseExport(EXPORT).map(e => [e.reg, e.name, e.area]), [
+        [10001, 'Zentrale offen', 0],
+        [10003, 'Zentrale Netzausfall >30 Min.', 6],
+        [10004, 'Modul Keller fehlt', 1],
+        [10005, 'Tür Eingang', 1],
+        [10007, 'Fenster', 2],
+    ]);
+});
+
+test('export list in the settings: names, area and registers outside the configured range', async t => {
+    const { adapter } = await start(t, { exportCsv: EXPORT, inputs: '10000-10002' }, {}, nx => {
+        nx.area(1, 1);
+        nx.input(10005, 1);
+        nx.input(10007);
+    });
+    await until(() => adapter.val('inputs.10005.open') === true);
+    assert.equal(adapter.objects['nox_alarmzentrale.0.inputs.10005'].common.name, 'Tür Eingang');
+    assert.equal(adapter.val('inputs.10007.area'), 2);
+    assert.equal(adapter.objects['nox_alarmzentrale.0.inputs.10004'], undefined, 'not used by the NOX -> not created');
+    assert.ok(adapter.logs.includes('info: Exportliste: 5 Eingänge mit Namen oder Bereich'));
+});
