@@ -1,0 +1,221 @@
+{
+  "i18n": true,
+  "type": "panel",
+  "items": {
+    "help": {
+      "type": "staticText",
+      "text": "In the NOX programming the Modbus server must be switched on (NOX System >= V8.60). The adapter finds the areas and detectors in the register ranges below by itself (bit 'used by the NOX').",
+      "xs": 12
+    },
+    "host": {
+      "type": "text",
+      "label": "Address of the NOX",
+      "help": "IP address or name, e.g. 192.168.1.x",
+      "newLine": true,
+      "xs": 12,
+      "sm": 6
+    },
+    "port": {
+      "type": "number",
+      "label": "Port",
+      "min": 1,
+      "max": 65535,
+      "default": 502,
+      "xs": 6,
+      "sm": 2
+    },
+    "unitId": {
+      "type": "number",
+      "label": "Unit ID",
+      "min": 0,
+      "max": 255,
+      "default": 1,
+      "xs": 6,
+      "sm": 2
+    },
+    "interval": {
+      "type": "number",
+      "label": "Poll interval (s)",
+      "min": 0.5,
+      "max": 60,
+      "step": 0.5,
+      "default": 1,
+      "newLine": true,
+      "xs": 6,
+      "sm": 3
+    },
+    "timeout": {
+      "type": "number",
+      "label": "Timeout (s)",
+      "min": 2,
+      "max": 60,
+      "default": 5,
+      "xs": 6,
+      "sm": 3
+    },
+    "areas": {
+      "type": "text",
+      "label": "Area registers",
+      "help": "Area 1 = register 1, e.g. 1-16",
+      "default": "1-16",
+      "newLine": true,
+      "xs": 12,
+      "sm": 4
+    },
+    "inputs": {
+      "type": "text",
+      "label": "Detector registers",
+      "help": "From R9: NOX input 1 = 10000, e.g. 10000-10199. Older: module ID + input, e.g. 20011-20018 (several ranges with commas)",
+      "default": "10000-10127",
+      "xs": 12,
+      "sm": 8
+    },
+    "byteOrder": {
+      "type": "select",
+      "label": "Byte order",
+      "default": "auto",
+      "options": [
+        {
+          "label": "automatic",
+          "value": "auto"
+        },
+        {
+          "label": "standard (high byte first)",
+          "value": "be"
+        },
+        {
+          "label": "swapped (low byte first)",
+          "value": "le"
+        }
+      ],
+      "newLine": true,
+      "xs": 12,
+      "sm": 4
+    },
+    "areaVersion": {
+      "type": "select",
+      "label": "Area states",
+      "default": "auto",
+      "options": [
+        {
+          "label": "automatic",
+          "value": "auto"
+        },
+        {
+          "label": "version 1 (one bit per state)",
+          "value": "1"
+        },
+        {
+          "label": "version 2 (number, NOX >= 9.71)",
+          "value": "2"
+        }
+      ],
+      "xs": 12,
+      "sm": 4
+    },
+    "offset": {
+      "type": "select",
+      "label": "Address offset",
+      "default": 0,
+      "options": [
+        {
+          "label": "none (register 1 = address 1)",
+          "value": 0
+        },
+        {
+          "label": "-1 (register 1 = address 0)",
+          "value": -1
+        }
+      ],
+      "xs": 12,
+      "sm": 4
+    },
+    "controlHelp": {
+      "type": "staticText",
+      "text": "Arming/disarming, switching detectors off and acknowledging alarms from ioBroker. Only tick this if every adapter and script that can write to this instance is trustworthy.",
+      "newLine": true,
+      "xs": 12
+    },
+    "allowControl": {
+      "type": "checkbox",
+      "label": "Allow control (arm/disarm, detectors, acknowledge)",
+      "default": false,
+      "newLine": true,
+      "xs": 12
+    },
+    "names": {
+      "type": "table",
+      "label": "Names (optional)",
+      "newLine": true,
+      "xs": 12,
+      "items": [
+        {
+          "type": "select",
+          "attr": "kind",
+          "title": "Kind",
+          "width": "25%",
+          "default": "input",
+          "options": [
+            {
+              "label": "Detector",
+              "value": "input"
+            },
+            {
+              "label": "Area",
+              "value": "area"
+            }
+          ]
+        },
+        {
+          "type": "number",
+          "attr": "nr",
+          "title": "Register",
+          "width": "25%"
+        },
+        {
+          "type": "text",
+          "attr": "name",
+          "title": "Name",
+          "width": "50%"
+        }
+      ]
+    },
+    "climate": {
+      "type": "table",
+      "label": "NOX THS / THT (temperature, humidity)",
+      "newLine": true,
+      "xs": 12,
+      "items": [
+        {
+          "type": "number",
+          "attr": "id",
+          "title": "ID number",
+          "width": "25%"
+        },
+        {
+          "type": "select",
+          "attr": "kind",
+          "title": "Type",
+          "width": "25%",
+          "default": "ths",
+          "options": [
+            {
+              "label": "NOX THS",
+              "value": "ths"
+            },
+            {
+              "label": "NOX THT",
+              "value": "tht"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "attr": "name",
+          "title": "Name",
+          "width": "50%"
+        }
+      ]
+    }
+  }
+}

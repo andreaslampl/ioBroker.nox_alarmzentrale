@@ -1,0 +1,90 @@
+{
+  "common": {
+    "name": "nox_alarmzentrale",
+    "version": "0.1.0",
+    "news": {
+      "0.1.0": {
+        "en": "First version: NOX alarm system via the NOX Modbus server - areas (armed/disarmed, alarm), detectors (open, sabotage, deactivated, alarm), NOX THS/THT; arming and disarming only when allowed in the settings",
+        "de": "Erste Version: NOX-Alarmanlage über den NOX-Modbus-Server – Bereiche (scharf/unscharf, Alarm), Melder (offen, Sabotage, abgeschaltet, Alarm), NOX THS/THT; Scharf-/Unscharfschalten nur wenn in den Einstellungen erlaubt"
+      }
+    },
+    "titleLang": {
+      "en": "NOX Alarmzentrale",
+      "de": "NOX Alarmzentrale"
+    },
+    "desc": {
+      "en": "NOX intrusion alarm system via its local Modbus server: areas, detectors, temperature/humidity; optional arming/disarming",
+      "de": "NOX-Alarmanlage über ihren lokalen Modbus-Server: Bereiche, Melder, Temperatur/Feuchte; Scharf-/Unscharfschalten optional"
+    },
+    "authors": [
+      "andreaslampl"
+    ],
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "mode": "daemon",
+    "icon": "nox.png",
+    "extIcon": "https://raw.githubusercontent.com/andreaslampl/ioBroker.nox_Alarmzentrale/main/admin/nox.png",
+    "readme": "https://github.com/andreaslampl/ioBroker.nox_Alarmzentrale/blob/main/README.md",
+    "enabled": true,
+    "type": "alarm",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=5.0.19"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=6.0.0"
+      }
+    ],
+    "tier": 2
+  },
+  "native": {
+    "host": "",
+    "port": 502,
+    "unitId": 1,
+    "interval": 1,
+    "timeout": 5,
+    "areas": "1-16",
+    "inputs": "10000-10127",
+    "byteOrder": "auto",
+    "areaVersion": "auto",
+    "offset": 0,
+    "allowControl": false,
+    "names": [],
+    "climate": []
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Information"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "name": {
+          "en": "Connected to the NOX",
+          "de": "Verbunden mit der NOX"
+        },
+        "type": "boolean",
+        "role": "indicator.connected",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
+}

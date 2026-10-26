@@ -1,0 +1,40 @@
+{
+  "name": "iobroker.nox_alarmzentrale",
+  "version": "0.1.0",
+  "description": "NOX alarm system via its Modbus server for ioBroker",
+  "author": "andreaslampl",
+  "license": "MIT",
+  "homepage": "https://github.com/andreaslampl/ioBroker.nox_Alarmzentrale",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andreaslampl/ioBroker.nox_Alarmzentrale.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andreaslampl/ioBroker.nox_Alarmzentrale/issues"
+  },
+  "keywords": [
+    "ioBroker",
+    "NOX",
+    "alarm",
+    "intrusion",
+    "Modbus"
+  ],
+  "main": "main.js",
+  "files": [
+    "admin/",
+    "lib/",
+    "main.js",
+    "io-package.json",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.2.3"
+  },
+  "scripts": {
+    "test": "node --test --test-timeout=30000 test/*.test.js"
+  }
+}
