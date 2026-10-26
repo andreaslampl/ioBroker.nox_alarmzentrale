@@ -56,6 +56,13 @@ the generic modbus adapter + Blockly and wanted readable states instead.
   Modbus exception? The wiki's deactivation example uses an ID-based register (22103) - maybe mask write does not
   work on the R9 registers (10000+), or the NOX's Modbus user lacks the right.
 
+- 0.1.3 field log: scan found 6 areas, 97 inputs, byte order standard, area version 2. Deactivating an input (R9
+  register, area disarmed): mask write accepted without exception, value stays 0x8000 -> the NOX ignores it. Not built:
+  writing to the ID-based register (module ID * 10 + input) - for bus 1 those numbers (10011-19999) overlap the R9
+  registers of OTHER inputs, a wrong guess could switch off a different detector. Asked the owner to check in the NOX
+  whether the input profile allows deactivation / the Modbus server has the right, whether the keypad can switch the
+  same detector off, and whether arming (register write) works at all.
+
 ## Conventions
 
 - UI texts and README in German, code and comments in English.
