@@ -63,6 +63,14 @@ the generic modbus adapter + Blockly and wanted readable states instead.
   whether the input profile allows deactivation / the Modbus server has the right, whether the keypad can switch the
   same detector off, and whether arming (register write) works at all.
 
+- Owner (is the installer himself) sent the NOX programming (.sqlite, contains user codes - looked only at profiles/
+  areas/modbus, copy deleted, nothing committed). Findings: table NoxInputs has a `ModbusRegister` column (MK input =
+  10022 as used) -> the adapter writes to the right register. Input profile of the MK inputs = 40; user profile
+  "Managementsystem" may deactivate all profiles; NoxAreas.AllowDisable = 0 for every area (meaning unclear - another
+  input in area 2 is deactivated); Modbus server settings are an unlabeled tab list in NoxConfig.AddSetup
+  ("Modbus 503 1 11 1 0 0 0 1 0 1 ..."), not decodable without the tool's labels. Asked for a screenshot of the
+  Modbus server page and the area option, and how the other input was deactivated.
+
 ## Conventions
 
 - UI texts and README in German, code and comments in English.
