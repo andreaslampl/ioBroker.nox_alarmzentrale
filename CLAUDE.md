@@ -48,6 +48,9 @@ the generic modbus adapter + Blockly and wanted readable states instead.
   the list's first input at 10001 - whatever the reason, the field data wins). Pasted into `exportCsv`
   (`parseExport()`); name priority: own table > modbus import > export; `inputs.N.area` from the list.
 
+- 0.1.2 field: installed with the lowercase URL; owner: "Funktioniert sehr gut" (reading confirmed on the real NOX).
+  Control (arm/disarm, deactivate, acknowledge) not yet tested.
+
 ## Conventions
 
 - UI texts and README in German, code and comments in English.
