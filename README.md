@@ -8,8 +8,11 @@ Gebaut nach der NOX-Wiki-Seite „Modbus Server“ (NOX System ab V8.60).
 ## Installation
 
 ```
-iobroker url https://github.com/andreaslampl/ioBroker.nox_Alarmzentrale
+iobroker url https://github.com/andreaslampl/ioBroker.nox_alarmzentrale
 ```
+
+Die Adresse bitte **kleingeschrieben** verwenden (`nox_alarmzentrale`): mit großem „A“ bricht die Installation mit
+„Cannot install … 0“ ab, weil ioBroker den Ordnernamen aus der Adresse übernimmt, npm ihn aber kleinschreibt.
 
 Danach eine Instanz anlegen. Läuft schon der **modbus-Adapter** für die NOX, diese Instanz anhalten –
 ob die NOX zwei Modbus-Verbindungen gleichzeitig annimmt, ist nicht dokumentiert.

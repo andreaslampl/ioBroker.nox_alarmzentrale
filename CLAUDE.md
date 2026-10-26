@@ -24,6 +24,9 @@ the generic modbus adapter + Blockly and wanted readable states instead.
 
 - Repo `ioBroker.nox_Alarmzentrale` (owner's choice), adapter ID `nox_alarmzentrale` - `iobroker url` derives the
   adapter name from the repo name, so they must match (see the fc20-cerberus-bacnet field log).
+- Field: `iobroker url …/ioBroker.nox_Alarmzentrale` failed with "Cannot install …: 0" (exit 25): js-controller takes the
+  adapter name from the URL with its case (`nox_Alarmzentrale`) and looks for node_modules/iobroker.nox_Alarmzentrale,
+  npm installs lowercase. Install with the lowercase URL (GitHub ignores case) - or rename the repo to lowercase.
 
 ## Status
 
@@ -49,6 +52,6 @@ the generic modbus adapter + Blockly and wanted readable states instead.
 
 - UI texts and README in German, code and comments in English.
 - Bump `version` in both `package.json` and `io-package.json` and add a `news` entry.
-- Install on the ioBroker host: `iobroker url https://github.com/andreaslampl/ioBroker.nox_Alarmzentrale`.
+- Install on the ioBroker host: `iobroker url https://github.com/andreaslampl/ioBroker.nox_alarmzentrale`.
 - Run `npm test` before committing.
 - Don't put the owner's IP addresses or detector names in the repository (use 192.168.1.x examples).
