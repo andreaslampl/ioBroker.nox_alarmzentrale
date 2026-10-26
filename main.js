@@ -262,6 +262,7 @@ class Nox extends utils.Adapter {
             await this.put(`${p}.area`, this.inputArea.get(r));
         }
         await this.extendObject(`${p}.open`, ro('Offen / Bewegung', 'boolean', 'sensor'));
+        await this.extendObject(`${p}.closed`, ro('Geschlossen (true = zu, false = auf)', 'boolean', 'indicator'));
         await this.extendObject(`${p}.sabotage`, ro('Sabotage', 'boolean', 'indicator.alarm'));
         await this.extendObject(`${p}.deactivated`, this.control ? rw('Abgeschaltet', 'boolean', 'switch') : ro('Abgeschaltet', 'boolean', 'indicator'));
         await this.extendObject(`${p}.alarm`, ro('Alarm', 'boolean', 'indicator.alarm'));
@@ -368,6 +369,7 @@ class Nox extends utils.Adapter {
             for (const key of ['open', 'sabotage', 'deactivated', 'alarm', 'open2']) {
                 await this.put(`${p}.${key}`, s[key]);
             }
+            await this.put(`${p}.closed`, !s.open);
         }
         for (const c of this.climate) {
             for (const [o, key] of N.CLIMATE[c.kind]) {

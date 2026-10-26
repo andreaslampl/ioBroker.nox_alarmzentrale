@@ -50,7 +50,7 @@ Der Adapter liest beim Start alle Register der angegebenen Bereiche und legt nur
 | `setState` | (nur mit Steuern) Zustand 1–5 setzen |
 | `raw` | Registerwert (zur Kontrolle) |
 
-**Melder** `nox_alarmzentrale.0.inputs.<Register>`: `open` (offen/Bewegung), `sabotage`, `deactivated` (abgeschaltet –
+**Melder** `nox_alarmzentrale.0.inputs.<Register>`: `open` (offen/Bewegung), `closed` (true = zu, false = auf), `sabotage`, `deactivated` (abgeschaltet –
 mit Steuern auch schaltbar), `alarm`, `open2`, `raw`, `ack` (nur mit Steuern: Alarm quittieren).
 
 **Alle Alarme quittieren**: `nox_alarmzentrale.0.control.ackAll` (nur mit Steuern).

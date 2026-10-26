@@ -67,6 +67,8 @@ test('swapped bytes (as the owner reads them): areas and detectors found, states
     assert.equal(adapter.val('areas.2.armed'), true);
     assert.equal(adapter.val('inputs.10001.open'), true);
     assert.equal(adapter.val('inputs.10000.open'), false);
+    assert.equal(adapter.val('inputs.10001.closed'), false);
+    assert.equal(adapter.val('inputs.10000.closed'), true);
     assert.equal(adapter.val('inputs.10003.alarm'), true);
     assert.equal(adapter.objects['nox_alarmzentrale.0.areas.1.armed'].common.write, false, 'control is off by default');
 });

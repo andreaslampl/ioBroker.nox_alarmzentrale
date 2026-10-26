@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "nox_alarmzentrale",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "news": {
+      "0.1.6": {
+        "en": "Detectors: new state 'closed' (true = closed, false = open)",
+        "de": "Melder: neuer Datenpunkt „closed“ (true = zu, false = auf)"
+      },
       "0.1.5": {
         "en": "Switching detectors on again works: the mask write variant is learned separately for off and on (info.maskModeOn / info.maskModeOff); acknowledging no longer switches a deactivated detector on",
         "de": "Melder wieder einschalten geht: Die Variante des Maskenschreibens wird für Aus und Ein getrennt gelernt (info.maskModeOn / info.maskModeOff); Quittieren schaltet einen abgeschalteten Melder nicht mehr ein"

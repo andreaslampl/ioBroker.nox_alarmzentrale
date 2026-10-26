@@ -86,6 +86,9 @@ the generic modbus adapter + Blockly and wanted readable states instead.
 - 0.1.5 confirmed by the owner on the real NOX: switching detectors off and on works ("Funktioniert Perfekt").
   Arming/disarming and acknowledging not yet reported.
 
+- 0.1.6: owner asked for a "zu = true" state like at the SPC (there: zones.N.open + numeric input) -> `inputs.N.closed`
+  = !open.
+
 ## Conventions
 
 - UI texts and README in German, code and comments in English.
