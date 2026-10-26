@@ -56,6 +56,7 @@ the generic modbus adapter + Blockly and wanted readable states instead.
   Modbus exception? The wiki's deactivation example uses an ID-based register (22103) - maybe mask write does not
   work on the R9 registers (10000+), or the NOX's Modbus user lacks the right.
 
+## Conventions
 
 - UI texts and README in German, code and comments in English.
 - Bump `version` in both `package.json` and `io-package.json` and add a `news` entry.
