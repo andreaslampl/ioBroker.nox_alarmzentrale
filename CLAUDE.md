@@ -33,6 +33,12 @@ the generic modbus adapter + Blockly and wanted readable states instead.
   little endian (either way the detection looks at the bytes on the wire, writes use the same order), whether unused registers read 0
   or raise an exception (both handled), whether two Modbus clients are allowed.
 
+- 0.1.1: owner sent their modbus adapter list (areas 1-2, inputs 10020-10096, type uint16le, names) and asked to
+  build the names in - not committed (personal data); instead `modbusImport` ('modbus.N'): `importModbus()` reads
+  `system.adapter.modbus.N` native.holdingRegs/inputRegs (`_address`, `name`), adds the registers to the scan and
+  uses the names (own table wins). Owner's values: areas 384 (= 0x8001 version 2 Unscharf), 1408 = open + deactivated;
+  their modbus adapter was set to little endian, so the NOX itself sends standard order.
+
 ## Conventions
 
 - UI texts and README in German, code and comments in English.

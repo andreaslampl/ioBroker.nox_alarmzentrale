@@ -49,6 +49,7 @@ class Nox extends utils.Adapter {
             return;
         }
         this.names = new Map();
+        await this.importModbus();
         for (const row of Array.isArray(this.config.names) ? this.config.names : []) {
             const nr = Number(row && row.nr);
             if (Number.isInteger(nr) && String(row.name || '').trim()) {
@@ -81,6 +82,57 @@ class Nox extends utils.Adapter {
         this.subscribeStates('inputs.*');
         this.subscribeStates('control.*');
         this.poll();
+    }
+
+    /**
+     * Names and registers from an instance of the generic modbus adapter that already reads the NOX (its holding and
+     * input registers: address + name), so nothing has to be typed again. Own names in the table win.
+     */
+    async importModbus() {
+        const inst = String(this.config.modbusImport || '').trim();
+        if (!inst) {
+            return;
+        }
+        if (!/^modbus\.\d+$/.test(inst)) {
+            this.log.warn(`Übernahme: „${inst}“ ist keine modbus-Instanz (Beispiel: modbus.0)`);
+            return;
+        }
+        const obj = await this.getForeignObjectAsync(`system.adapter.${inst}`).catch(() => null);
+        const native = (obj && obj.native) || {};
+        const rows = [...(Array.isArray(native.holdingRegs) ? native.holdingRegs : []), ...(Array.isArray(native.inputRegs) ? native.inputRegs : [])];
+        let areas = 0;
+        let inputs = 0;
+        for (const r of rows) {
+            const addr = Number(r && (r._address !== undefined ? r._address : r.address));
+            const name = String((r && (r.name || r.description)) || '').trim();
+            if (!Number.isInteger(addr) || addr < 1 || addr > 65535 || addr === N.ACK_ALL) {
+                continue;
+            }
+            if (addr <= 999) {
+                if (!this.areaRegs.includes(addr)) {
+                    this.areaRegs.push(addr);
+                }
+                if (name) {
+                    this.names.set(`area:${addr}`, name);
+                }
+                areas++;
+            } else {
+                if (!this.inputRegs.includes(addr)) {
+                    this.inputRegs.push(addr);
+                }
+                if (name) {
+                    this.names.set(`input:${addr}`, name);
+                }
+                inputs++;
+            }
+        }
+        this.areaRegs.sort((a, b) => a - b);
+        this.inputRegs.sort((a, b) => a - b);
+        if (!obj) {
+            this.log.warn(`Übernahme: Instanz ${inst} nicht gefunden`);
+        } else {
+            this.log.info(`Übernommen aus ${inst}: ${areas} Bereich(e), ${inputs} Melder mit Namen`);
+        }
     }
 
     fix(v) {

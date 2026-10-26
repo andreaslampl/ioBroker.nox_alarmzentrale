@@ -70,6 +70,14 @@
       "xs": 12,
       "sm": 8
     },
+    "modbusImport": {
+      "type": "text",
+      "label": "Take over from modbus instance",
+      "help": "e.g. modbus.0 - names and registers of the modbus adapter that already reads the NOX",
+      "newLine": true,
+      "xs": 12,
+      "sm": 6
+    },
     "byteOrder": {
       "type": "select",
       "label": "Byte order",

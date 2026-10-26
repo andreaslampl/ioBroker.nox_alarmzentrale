@@ -30,5 +30,7 @@
   "Name": "Name",
   "NOX THS / THT (temperature, humidity)": "NOX THS / THT (temperature, humidity)",
   "ID number": "ID number",
-  "Type": "Type"
+  "Type": "Type",
+  "Take over from modbus instance": "Take over from modbus instance",
+  "e.g. modbus.0 - names and registers of the modbus adapter that already reads the NOX": "e.g. modbus.0 - names and registers of the modbus adapter that already reads the NOX"
 }

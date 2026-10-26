@@ -15,6 +15,9 @@ test('decoding from the NOX wiki tables', () => {
     assert.equal(N.detectOrder([128, 384, 0, 128]), 'le');
     assert.deepEqual(N.parseInput(N.swap(384)), { used: true, open: true, sabotage: false, deactivated: false, alarm: false, open2: false });
     assert.equal(N.detectOrder([0x8000, 0x8001]), 'be');
+    // the owner's real values (modbus adapter set to little endian): areas 384 = unarmed, 1408 = open + deactivated
+    assert.equal(N.parseArea(N.swap(384), N.detectVersion([N.swap(384), N.swap(384)])).text, 'Unscharf');
+    assert.deepEqual(N.parseInput(N.swap(1408)), { used: true, open: true, sabotage: false, deactivated: true, alarm: false, open2: false });
     // area version 2: number, version 1: one bit
     assert.equal(N.parseArea(0x8005, 2).text, 'Scharf');
     assert.equal(N.parseArea(0x8000 | 32, 1).text, 'Scharf');
@@ -28,11 +31,12 @@ test('decoding from the NOX wiki tables', () => {
     assert.equal(N.temperature(2123), -12.3);
 });
 
-async function start(t, config = {}, noxOpts = {}, setup = () => {}) {
+async function start(t, config = {}, noxOpts = {}, setup = () => {}, foreign = {}) {
     const nox = fakeNox(noxOpts);
     setup(nox);
     const port = await nox.listen();
     const adapter = require('../main.js')({ config: { host: '127.0.0.1', port, unitId: 1, pollMs: 60, areas: '1-4', inputs: '10000-10009', ...config } });
+    adapter.foreignObjects = foreign;
     adapter.emit('ready');
     t.after(async () => {
         await new Promise(r => adapter.emit('unload', r));
@@ -144,4 +148,24 @@ test('connection loss: not connected, reconnects and reads the list again', asyn
     await until(() => adapter.val('info.connection') === true, 8000);
     await until(() => adapter.val('info.inputs') === 4);
     assert.ok(adapter.logs.some(l => /warn: NOX: Keine Antwort/.test(l)));
+});
+
+test('names and registers taken over from the modbus adapter (as the owner set it up)', async t => {
+    const modbus = { native: { holdingRegs: [
+        { _address: 1, name: 'Haus', type: 'uint16le' },
+        { _address: 10020, name: 'Haustür', type: 'uint16le' },
+        { _address: 10061, name: 'Fenster', type: 'uint16le' },
+    ] } };
+    const { adapter } = await start(t, { modbusImport: 'modbus.0', names: [{ kind: 'input', nr: 10061, name: 'Eigener Name' }] }, {}, nx => {
+        nx.area(1, 1);
+        nx.input(10020, 1);
+        nx.input(10061, 1 | 4); // 1408 with swapped bytes: open + deactivated
+    }, { 'system.adapter.modbus.0': modbus });
+    await until(() => adapter.val('inputs.10061.deactivated') === true);
+    assert.equal(adapter.objects['nox_alarmzentrale.0.areas.1'].common.name, 'Haus');
+    assert.equal(adapter.objects['nox_alarmzentrale.0.inputs.10020'].common.name, 'Haustür', 'outside the configured range, taken from modbus');
+    assert.equal(adapter.objects['nox_alarmzentrale.0.inputs.10061'].common.name, 'Eigener Name', 'own table wins');
+    assert.equal(adapter.val('inputs.10020.open'), true);
+    assert.equal(adapter.val('areas.1.text'), 'Unscharf');
+    assert.ok(adapter.logs.includes('info: Übernommen aus modbus.0: 1 Bereich(e), 2 Melder mit Namen'));
 });
