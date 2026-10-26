@@ -77,6 +77,12 @@ the generic modbus adapter + Blockly and wanted readable states instead.
   (and = ~bit) and, if the bit did not change after 1.5 s, the inverse one (and = bit); the working one is kept in
   `info.maskMode` (state, survives restarts). Deactivation commands run one after another (`deactChain`).
 
+- 0.1.4 field: switching off worked with "inv" (and = bit 7, or = bit 7), switching on with "inv" (and = bit 7, or = 0)
+  did not. All field results fit "new = (internal bits incl. bit 7 OR or) AND and" (fake `maskStyle: 'nox'`): off needs
+  inv, on needs std. 0.1.5: learned per direction (`info.maskModeOn` / `info.maskModeOff`; old `info.maskMode`
+  migrated to On); ack (bit 6) with the "inv" NOX sends bit 7 along in and/or when the input is deactivated, else
+  it would switch the detector on.
+
 ## Conventions
 
 - UI texts and README in German, code and comments in English.

@@ -207,6 +207,34 @@ test('export list in the settings: names, area and registers outside the configu
     assert.ok(adapter.logs.includes('info: Exportliste: 5 Eingänge mit Namen oder Bereich'));
 });
 
+test('the owner\'s NOX: switching off only with the inverse mask, on only with the standard one, ack keeps it off', async t => {
+    const { nox, adapter } = await start(t, { allowControl: true }, { maskStyle: 'nox' }, nx => {
+        nx.input(10000);
+        nx.input(10001);
+    });
+    await until(() => adapter.val('inputs.10000.deactivated') === false);
+    const done = (id, v) => until(() => adapter.val(`inputs.${id}.deactivated`) === v && adapter.states[`nox_alarmzentrale.0.inputs.${id}.deactivated`].ack);
+    adapter.command('inputs.10000.deactivated', true);
+    await until(() => adapter.val('info.maskModeOn') === 'inv');
+    await done(10000, true);
+    adapter.command('inputs.10000.deactivated', false);
+    await until(() => adapter.val('info.maskModeOff') === 'std');
+    await done(10000, false);
+    assert.deepEqual(nox.writes.filter(w => w[0] === 'mask').map(w => [w[2], w[3]]), [[0xff7f, 0x80], [0x80, 0x80], [0xff7f, 0]]);
+    // learned: one try each from now on
+    adapter.command('inputs.10001.deactivated', true);
+    await done(10001, true);
+    // acknowledging an alarm of a deactivated detector must not switch it on again
+    nox.regs.set(10001, nox.get(10001) | 8);
+    await until(() => adapter.val('inputs.10001.alarm') === true);
+    adapter.command('inputs.10001.ack', true);
+    await until(() => adapter.val('inputs.10001.alarm') === false);
+    assert.equal(adapter.val('inputs.10001.deactivated'), true);
+    adapter.command('inputs.10001.deactivated', false);
+    await done(10001, false);
+    assert.deepEqual(nox.writes.filter(w => w[0] === 'mask').slice(3).map(w => [w[2], w[3]]), [[0x80, 0x80], [0xc0, 0xc0], [0xff7f, 0]]);
+});
+
 test('a NOX that reads the mask write the other way round: second variant tried, kept for later', async t => {
     const { nox, adapter } = await start(t, { allowControl: true }, { maskStyle: 'inv' }, nx => {
         nx.input(10000);
@@ -214,14 +242,15 @@ test('a NOX that reads the mask write the other way round: second variant tried,
     });
     await until(() => adapter.val('inputs.10000.deactivated') === false);
     adapter.command('inputs.10000.deactivated', true);
-    await until(() => adapter.val('info.maskMode') === 'inv');
+    await until(() => adapter.val('info.maskModeOn') === 'inv');
     await until(() => adapter.val('inputs.10000.deactivated') === true && adapter.states['nox_alarmzentrale.0.inputs.10000.deactivated'].ack);
     assert.deepEqual(nox.writes.filter(w => w[0] === 'mask').map(w => [w[2], w[3]]), [[0xff7f, 0x80], [0x80, 0x80]]);
-    assert.ok(adapter.logs.includes('info: Maskenschreiben: Variante umgekehrt funktioniert mit dieser NOX'));
+    assert.ok(adapter.logs.includes('info: Maskenschreiben (abschalten): Variante umgekehrt funktioniert mit dieser NOX'));
     // from now on only the working variant
     adapter.command('inputs.10001.deactivated', true);
     await until(() => adapter.val('inputs.10001.deactivated') === true && adapter.states['nox_alarmzentrale.0.inputs.10001.deactivated'].ack);
     adapter.command('inputs.10001.deactivated', false);
     await until(() => adapter.val('inputs.10001.deactivated') === false && adapter.states['nox_alarmzentrale.0.inputs.10001.deactivated'].ack);
-    assert.deepEqual(nox.writes.filter(w => w[0] === 'mask').slice(2).map(w => [w[2], w[3]]), [[0x80, 0x80], [0x80, 0]]);
+    // switching on is learned on its own (here the inverse one again)
+    assert.deepEqual(nox.writes.filter(w => w[0] === 'mask').slice(2).map(w => [w[2], w[3]]), [[0x80, 0x80], [0xff7f, 0], [0x80, 0]]);
 });

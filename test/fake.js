@@ -103,8 +103,10 @@ function fakeNox({ unitId = 1, version = 2, swapped = false, offset = 0, refuseA
                     const or = word(pdu.readUInt16BE(5));
                     n.writes.push(['mask', addr, and, or]);
                     const cur = n.get(addr);
-                    // std = Modbus spec; inv = "and" names the bits to change (ignores the spec variant)
-                    const next = maskStyle === 'inv' ? (cur & ~and) | (or & and) : (cur & and) | (or & ~and);
+                    // the command bit 7 is kept inside (shows as bit 2); std = Modbus spec; inv = "and" names the bits
+                    // to change; nox = (bits OR "or") AND "and" - what the owner's NOX did in the field
+                    const c = cur | (cur & 4 ? 0x80 : 0);
+                    const next = maskStyle === 'inv' ? (c & ~and) | (or & and) : maskStyle === 'nox' ? (c | or) & and : (c & and) | (or & ~and);
                     // bit 7 = deactivate (shows as bit 2), bit 6 = acknowledge (clears the alarm bit 3)
                     let st = next & 0x80 ? cur | 4 : cur & ~4;
                     if (next & 0x40) {

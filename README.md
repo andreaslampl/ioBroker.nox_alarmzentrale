@@ -59,8 +59,9 @@ mit Steuern auch schaltbar), `alarm`, `open2`, `raw`, `ack` (nur mit Steuern: Al
 
 In der NOX unter **Modbus → Modbus Server → Erlaubte Funktionen** müssen Bereichsschaltungen, Melderdeaktivierung
 und Alarmquittierung angehakt sein, „Adressierung“ = Eingangsnummer → Modbus Adresse passt zur Exportliste.
-Beim ersten Abschalten eines Melders prüft der Adapter, welche Variante des Maskenschreibens die NOX versteht, und
-merkt sie sich (`info.maskMode`).
+Beim ersten Ab- und beim ersten Einschalten eines Melders prüft der Adapter, welche Variante des Maskenschreibens die
+NOX versteht, und merkt sie sich (`info.maskModeOn` / `info.maskModeOff`). Dabei kann der erste Befehl ein paar
+Sekunden dauern.
 
 ## Sicherheit
 

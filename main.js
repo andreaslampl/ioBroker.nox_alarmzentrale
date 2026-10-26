@@ -69,10 +69,22 @@ class Nox extends utils.Adapter {
         await this.extendObject('info.byteOrder', ro('Byte-Reihenfolge', 'string', 'text'));
         await this.extendObject('info.areas', ro('Gefundene Bereiche', 'number', 'value'));
         await this.extendObject('info.inputs', ro('Gefundene Melder', 'number', 'value'));
-        await this.extendObject('info.maskMode', ro('Maskenschreiben (Melder abschalten)', 'string', 'text', { states: { std: 'Standard', inv: 'umgekehrt' } }));
-        const mm = await this.getStateAsync('info.maskMode');
-        this.maskMode = mm && ['std', 'inv'].includes(mm.val) ? mm.val : 'std';
-        this.maskConfirmed = Boolean(mm && ['std', 'inv'].includes(mm.val));
+        // which variant of the mask write the NOX understands, learned separately for setting and clearing a bit
+        const MASK = { std: 'Standard', inv: 'umgekehrt' };
+        await this.extendObject('info.maskModeOn', ro('Maskenschreiben: Bit setzen (abschalten)', 'string', 'text', { states: MASK }));
+        await this.extendObject('info.maskModeOff', ro('Maskenschreiben: Bit löschen (einschalten)', 'string', 'text', { states: MASK }));
+        this.maskModes = {};
+        for (const dir of ['On', 'Off']) {
+            const st = await this.getStateAsync(`info.maskMode${dir}`);
+            const ok = st && ['std', 'inv'].includes(st.val);
+            this.maskModes[dir.toLowerCase()] = { mode: ok ? st.val : 'std', confirmed: Boolean(ok) };
+        }
+        // 0.1.4 learned one variant for both directions - it was found by switching off
+        const old = await this.getStateAsync('info.maskMode');
+        if (old && ['std', 'inv'].includes(old.val) && !this.maskModes.on.confirmed) {
+            this.maskModes.on = { mode: old.val, confirmed: true };
+            await this.setState('info.maskModeOn', old.val, true);
+        }
         if (this.control) {
             await this.extendObject('control', { type: 'channel', common: { name: 'Steuerung' }, native: {} });
             await this.extendObject('control.ackAll', rw('Alle Alarme quittieren', 'boolean', 'button', { def: false }));
@@ -420,7 +432,10 @@ class Nox extends utils.Adapter {
                         await this.deactivate(Number(m[1]), reg, before, on);
                     }).catch(err => this.log.warn(`Befehl ${rel} fehlgeschlagen: ${err.message}`));
                 } else if (state.val) {
-                    await this.mask(reg, 6, true);
+                    // with the "inv" NOX a set bit 7 must be sent along, else acknowledging would switch the detector on
+                    const [cur] = await this.mb.read(reg, 1);
+                    const keep = this.maskModes.on.mode === 'inv' && N.parseInput(this.fix(cur)).deactivated ? 0x80 : 0;
+                    await this.mask(reg, 6, true, this.maskModes.on.mode, keep);
                     await this.setState(rel, false, true);
                 }
             } else if (rel === 'control.ackAll') {
@@ -444,39 +459,41 @@ class Nox extends utils.Adapter {
     /**
      * Switch a detector off/on and check what the NOX shows 1.5 s later. Until a variant of the mask write has worked
      * once, the other one is tried too (the NOX ignored the standard one in the field); the working one is kept in
-     * info.maskMode.
+     * info.maskModeOn / info.maskModeOff (the owner's NOX deactivates only with "inv" and activates only with "std" -
+     * as if it computed (bit 7 kept inside OR "or") AND "and").
      */
     async deactivate(nr, reg, before, on) {
         const hex = v => `0x${v.toString(16).padStart(4, '0')}`;
         const name = this.names.get(`input:${nr}`) || `Melder ${nr}`;
-        const modes = this.maskConfirmed ? [this.maskMode] : [this.maskMode, this.maskMode === 'std' ? 'inv' : 'std'];
+        const dir = on ? 'on' : 'off';
+        const known = this.maskModes[dir];
+        const modes = known.confirmed ? [known.mode] : [known.mode, known.mode === 'std' ? 'inv' : 'std'];
         let after = before;
         for (const mode of modes) {
             await this.mask(reg, 7, on, mode);
             await new Promise(r => setTimeout(r, Number(this.config.checkMs) || 1500)); // checkMs: tests only
             [after] = await this.mb.read(reg, 1);
             if (N.parseInput(this.fix(after)).deactivated === on) {
-                if (!this.maskConfirmed || mode !== this.maskMode) {
-                    this.maskMode = mode;
-                    this.maskConfirmed = true;
-                    await this.setState('info.maskMode', mode, true);
-                    this.log.info(`Maskenschreiben: Variante ${mode === 'std' ? 'Standard' : 'umgekehrt'} funktioniert mit dieser NOX`);
+                if (!known.confirmed || mode !== known.mode) {
+                    this.maskModes[dir] = { mode, confirmed: true };
+                    await this.setState(`info.maskMode${on ? 'On' : 'Off'}`, mode, true);
+                    this.log.info(`Maskenschreiben (${on ? 'abschalten' : 'einschalten'}): Variante ${mode === 'std' ? 'Standard' : 'umgekehrt'} funktioniert mit dieser NOX`);
                 }
                 this.log.info(`${name}: ${on ? 'abgeschaltet' : 'eingeschaltet'} (Register ${reg}, vorher ${hex(before)}, jetzt ${hex(after)})`);
                 return;
             }
         }
-        this.log.warn(`${name}: ${on ? 'abschalten' : 'einschalten'} gesendet (Register ${reg}, vorher ${hex(before)}, Variante${modes.length > 1 ? 'n Standard und umgekehrt' : ` ${this.maskMode}`}) – NOX meldet jetzt ${hex(after)}, NICHT ${on ? 'abgeschaltet' : 'eingeschaltet'}`);
+        this.log.warn(`${name}: ${on ? 'abschalten' : 'einschalten'} gesendet (Register ${reg}, vorher ${hex(before)}, Variante${modes.length > 1 ? 'n Standard und umgekehrt' : ` ${known.mode}`}) – NOX meldet jetzt ${hex(after)}, NICHT ${on ? 'abgeschaltet' : 'eingeschaltet'}`);
     }
 
     /**
      * set or clear one bit with "mask write register" (in the NOX's byte order). std (Modbus spec): result = (current
      * AND and) OR (or AND NOT and), the bit is cleared in "and" and set again by "or"; inv: "and" names the bit to change.
      */
-    async mask(reg, bit, on, mode = this.maskMode) {
+    async mask(reg, bit, on, mode = 'std', keep = 0) {
         const b = 1 << bit;
         if (mode === 'inv') {
-            await this.mb.maskWrite(reg, this.fix(b), this.fix(on ? b : 0));
+            await this.mb.maskWrite(reg, this.fix(b | keep), this.fix((on ? b : 0) | keep));
         } else {
             await this.mb.maskWrite(reg, this.fix(0xffff & ~b), this.fix(on ? b : 0));
         }

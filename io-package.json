@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "nox_alarmzentrale",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "news": {
+      "0.1.5": {
+        "en": "Switching detectors on again works: the mask write variant is learned separately for off and on (info.maskModeOn / info.maskModeOff); acknowledging no longer switches a deactivated detector on",
+        "de": "Melder wieder einschalten geht: Die Variante des Maskenschreibens wird für Aus und Ein getrennt gelernt (info.maskModeOn / info.maskModeOff); Quittieren schaltet einen abgeschalteten Melder nicht mehr ein"
+      },
       "0.1.4": {
         "en": "Switching detectors off: if the NOX ignores the standard mask write, the other variant is tried and kept (info.maskMode)",
         "de": "Melder abschalten: Ignoriert die NOX das Standard-Maskenschreiben, wird die andere Variante probiert und gemerkt (info.maskMode)"
