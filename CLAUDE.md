@@ -51,7 +51,11 @@ the generic modbus adapter + Blockly and wanted readable states instead.
 - 0.1.2 field: installed with the lowercase URL; owner: "Funktioniert sehr gut" (reading confirmed on the real NOX).
   Control (arm/disarm, deactivate, acknowledge) not yet tested.
 
-## Conventions
+- 0.1.3: owner: "Melder Abschalten geht nicht" (no log yet). `checkDeactivate()` reads the register before the mask
+  write and 1.5 s after, logs both (info if the bit changed, warn if not). Open questions: allowControl ticked?
+  Modbus exception? The wiki's deactivation example uses an ID-based register (22103) - maybe mask write does not
+  work on the R9 registers (10000+), or the NOX's Modbus user lacks the right.
+
 
 - UI texts and README in German, code and comments in English.
 - Bump `version` in both `package.json` and `io-package.json` and add a `news` entry.

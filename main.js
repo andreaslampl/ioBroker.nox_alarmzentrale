@@ -410,7 +410,9 @@ class Nox extends utils.Adapter {
                 const reg = Number(m[1]) + this.offset;
                 if (m[2] === 'deactivated') {
                     const on = state.val === true || state.val === 'true' || state.val === 1;
+                    const [before] = await this.mb.read(reg, 1);
                     await this.mask(reg, 7, on);
+                    this.checkDeactivate(Number(m[1]), reg, before, on);
                 } else if (state.val) {
                     await this.mask(reg, 6, true);
                     await this.setState(rel, false, true);
@@ -431,6 +433,26 @@ class Nox extends utils.Adapter {
         this.last.delete(rel);
         clearTimeout(this.timer);
         this.timer = setTimeout(() => this.poll(), 300);
+    }
+
+    /** diagnosis: what the NOX shows a moment after a (de)activation command */
+    checkDeactivate(nr, reg, before, on) {
+        const hex = v => `0x${v.toString(16).padStart(4, '0')}`;
+        setTimeout(async () => {
+            try {
+                const [after] = await this.mb.read(reg, 1);
+                const done = N.parseInput(this.fix(after)).deactivated === on;
+                const name = this.names.get(`input:${nr}`) || `Melder ${nr}`;
+                const msg = `${name}: ${on ? 'abschalten' : 'einschalten'} gesendet (Register ${reg}, vorher ${hex(before)}) – NOX meldet jetzt ${hex(after)}`;
+                if (done) {
+                    this.log.info(`${msg}, ${on ? 'abgeschaltet' : 'eingeschaltet'}`);
+                } else {
+                    this.log.warn(`${msg}, ${on ? 'NICHT abgeschaltet' : 'NICHT eingeschaltet'} (Berechtigung des Modbus-Servers in der NOX prüfen)`);
+                }
+            } catch (err) {
+                this.log.debug(`Kontrolle Register ${reg}: ${err.message}`);
+            }
+        }, 1500);
     }
 
     /** set or clear one bit with "mask write register" (in the NOX's byte order) */
