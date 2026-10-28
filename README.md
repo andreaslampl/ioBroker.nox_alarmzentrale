@@ -49,6 +49,9 @@ Der Adapter liest beim Start alle Register der angegebenen Bereiche und legt nur
 | `error` | warum das letzte Scharfschalten scheiterte (Sperrzeit, keine Berechtigung, aktive Melder, aktive Alarme) |
 | `setState` | (nur mit Steuern) Zustand 1–5 setzen |
 | `raw` | Registerwert (zur Kontrolle) |
+| `ready` | **scharfschaltbereit**: kein Melder des Bereichs offen oder in Sabotage (abgeschaltete und Eingänge mit Profil 1 „Kein Alarm“ zählen nicht) – braucht die Exportliste |
+| `openInputs` / `openCount` | welche bzw. wie viele Melder offen sind, z. B. „MK Küche 1, MK Bad“ |
+| `alarmInputs` | welche Melder den Alarm ausgelöst haben |
 
 **Melder** `nox_alarmzentrale.0.inputs.<Register>`: `open` (offen/Bewegung), `closed` (true = zu, false = auf), `sabotage`, `deactivated` (abgeschaltet –
 mit Steuern auch schaltbar), `alarm`, `open2`, `raw`, `ack` (nur mit Steuern: Alarm quittieren).

@@ -1,6 +1,6 @@
 {
   "name": "iobroker.nox_alarmzentrale",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "NOX alarm system via its Modbus server for ioBroker",
   "author": "andreaslampl",
   "license": "MIT",

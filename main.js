@@ -50,6 +50,7 @@ class Nox extends utils.Adapter {
         }
         this.names = new Map();
         this.inputArea = new Map();
+        this.noAlarm = new Set();
         this.importExport();
         await this.importModbus();
         for (const row of Array.isArray(this.config.names) ? this.config.names : []) {
@@ -119,6 +120,10 @@ class Nox extends utils.Adapter {
                 this.names.set(`input:${e.reg}`, e.name);
             }
             this.inputArea.set(e.reg, e.area);
+            // input profile 1 = "Kein Alarm" (e.g. key switch, info inputs): does not stop arming
+            if (e.profile === 1) {
+                this.noAlarm.add(e.reg);
+            }
         }
         this.inputRegs.sort((a, b) => a - b);
         this.log.info(`Exportliste: ${list.length} Eingänge mit Namen oder Bereich`);
@@ -251,6 +256,13 @@ class Nox extends utils.Adapter {
         if (this.control) {
             await this.extendObject(`${p}.setState`, rw('Zustand setzen (1-5)', 'number', 'level', { states: SET_STATES, min: 1, max: 5 }));
         }
+        // which detector belongs to which area comes from the export list
+        if (this.inputArea.size) {
+            await this.extendObject(`${p}.ready`, ro('Scharfschaltbereit (kein Melder offen)', 'boolean', 'indicator'));
+            await this.extendObject(`${p}.openInputs`, ro('Offene Melder', 'string', 'text'));
+            await this.extendObject(`${p}.openCount`, ro('Anzahl offener Melder', 'number', 'value'));
+            await this.extendObject(`${p}.alarmInputs`, ro('Ausgelöste Melder (Alarm)', 'string', 'text'));
+        }
     }
 
     async createInput(r) {
@@ -371,6 +383,9 @@ class Nox extends utils.Adapter {
             }
             await this.put(`${p}.closed`, !s.open);
         }
+        if (this.inputArea.size) {
+            await this.areaSummary(val);
+        }
         for (const c of this.climate) {
             for (const [o, key] of N.CLIMATE[c.kind]) {
                 const v = val(c.id * 10 + o);
@@ -380,6 +395,36 @@ class Nox extends utils.Adapter {
                 const out = key === 'temperature' ? N.temperature(v) : key === 'humidity' ? v : v !== 0;
                 await this.put(`climate.${c.id}.${key}`, out);
             }
+        }
+    }
+
+    /**
+     * Per area (from the export list's area column): ready to arm = no detector open or in sabotage (deactivated ones and
+     * profile 1 "Kein Alarm" do not count), which ones are open, which ones are in alarm.
+     */
+    async areaSummary(val) {
+        const name = r => this.names.get(`input:${r}`) || `Melder ${r}`;
+        for (const a of this.areas) {
+            const open = [];
+            const alarm = [];
+            for (const r of this.inputs) {
+                const v = val(r);
+                if (this.inputArea.get(r) !== a || v === undefined) {
+                    continue;
+                }
+                const s = N.parseInput(v);
+                if ((s.open || s.sabotage) && !s.deactivated && !this.noAlarm.has(r)) {
+                    open.push(name(r) + (s.sabotage ? ' (Sabotage)' : ''));
+                }
+                if (s.alarm) {
+                    alarm.push(name(r));
+                }
+            }
+            const p = `areas.${a}`;
+            await this.put(`${p}.ready`, open.length === 0);
+            await this.put(`${p}.openInputs`, open.join(', '));
+            await this.put(`${p}.openCount`, open.length);
+            await this.put(`${p}.alarmInputs`, alarm.join(', '));
         }
     }
 

@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "nox_alarmzentrale",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "news": {
+      "0.1.7": {
+        "en": "Per area (with the export list): ready to arm, open detectors, detectors in alarm (areas.N.ready / openInputs / openCount / alarmInputs)",
+        "de": "Pro Bereich (mit Exportliste): scharfschaltbereit, offene Melder, ausgelöste Melder (areas.N.ready / openInputs / openCount / alarmInputs)"
+      },
       "0.1.6": {
         "en": "Detectors: new state 'closed' (true = closed, false = open)",
         "de": "Melder: neuer Datenpunkt „closed“ (true = zu, false = auf)"

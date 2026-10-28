@@ -256,3 +256,23 @@ test('a NOX that reads the mask write the other way round: second variant tried,
     // switching on is learned on its own (here the inverse one again)
     assert.deepEqual(nox.writes.filter(w => w[0] === 'mask').slice(2).map(w => [w[2], w[3]]), [[0x80, 0x80], [0xff7f, 0], [0x80, 0]]);
 });
+
+test('per area: ready to arm and which detectors are open / in alarm (areas from the export list)', async t => {
+    const { nox, adapter } = await start(t, { exportCsv: EXPORT, inputs: '10000-10002' }, {}, nx => {
+        nx.area(1, 1);
+        nx.area(2, 1);
+        nx.input(10004); // Modul Keller fehlt (area 1)
+        nx.input(10005); // Tür Eingang (area 1)
+        nx.input(10007); // Fenster (area 2)
+    });
+    await until(() => adapter.val('areas.1.ready') === true && adapter.val('areas.2.ready') === true);
+    nox.input(10005, 1);
+    nox.input(10007, 1 | 4); // open but deactivated: does not count
+    await until(() => adapter.val('areas.1.ready') === false);
+    assert.equal(adapter.val('areas.1.openInputs'), 'Tür Eingang');
+    assert.equal(adapter.val('areas.1.openCount'), 1);
+    assert.equal(adapter.val('areas.2.ready'), true);
+    nox.input(10004, 2 | 8); // sabotage + alarm
+    await until(() => adapter.val('areas.1.alarmInputs') === 'Modul Keller fehlt');
+    assert.equal(adapter.val('areas.1.openInputs'), 'Modul Keller fehlt (Sabotage), Tür Eingang');
+});

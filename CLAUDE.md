@@ -89,6 +89,10 @@ the generic modbus adapter + Blockly and wanted readable states instead.
 - 0.1.6: owner asked for a "zu = true" state like at the SPC (there: zones.N.open + numeric input) -> `inputs.N.closed`
   = !open.
 
+- 0.1.7: owner wants SmartView to show "scharfschaltbereit" and which detectors are open/in alarm, several areas in one
+  tile -> per area (inputArea from the export list) `ready`, `openInputs`, `openCount`, `alarmInputs` (`areaSummary()`);
+  open or sabotage counts, deactivated and profile 1 ("Kein Alarm" in the owner's NOX) do not.
+
 ## Conventions
 
 - UI texts and README in German, code and comments in English.
